@@ -122,6 +122,16 @@
   }
 }
 
+/* Cinta de logos de clientes: la lista va duplicada, así que -50% cierra el bucle exacto. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 @layer utilities {
   /* Texto contorneado del hero (línea del medio de cada slide) */
   .text-outline-blue {
