@@ -1,6 +1,5 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import type { Noticia } from '@/content/noticias'
 import { formatearFecha } from '@/lib/fechas'
 
 /** Banner de /noticias. */
@@ -22,8 +21,19 @@ export function BannerNoticias() {
   )
 }
 
+export type TarjetaNoticia = {
+  slug: string
+  title: string
+  publishedAt: Date
+  image: string | null
+  excerpt: string
+}
+
+/** Imagen por defecto para noticias sin imagen propia. */
+export const IMAGEN_NOTICIA_POR_DEFECTO = '/bannernoticias.jpg'
+
 /** Grilla de tarjetas de noticias; cada una enlaza a su página. */
-export function GrillaNoticias({ noticias }: { noticias: readonly Noticia[] }) {
+export function GrillaNoticias({ noticias }: { noticias: readonly TarjetaNoticia[] }) {
   return (
     <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
       {noticias.map((noticia) => (
@@ -34,7 +44,7 @@ export function GrillaNoticias({ noticias }: { noticias: readonly Noticia[] }) {
           >
             <div className="relative h-48">
               <Image
-                src={noticia.imagen.src}
+                src={noticia.image ?? IMAGEN_NOTICIA_POR_DEFECTO}
                 alt=""
                 fill
                 sizes="(min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
@@ -42,9 +52,11 @@ export function GrillaNoticias({ noticias }: { noticias: readonly Noticia[] }) {
               />
             </div>
             <div className="p-4">
-              <h2 className="mb-2 text-lg font-semibold text-brand-white">{noticia.titulo}</h2>
+              <h2 className="mb-2 text-lg font-semibold text-brand-white">{noticia.title}</h2>
               <p className="text-sm text-brand-white">
-                <time dateTime={noticia.fecha}>{formatearFecha(noticia.fecha)}</time>
+                <time dateTime={noticia.publishedAt.toISOString().slice(0, 10)}>
+                  {formatearFecha(noticia.publishedAt)}
+                </time>
               </p>
             </div>
           </Link>
