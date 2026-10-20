@@ -38,7 +38,7 @@ Todas las imágenes que referencia el código (si falta alguna, la página muest
 
 | Uso       | Archivos                                                                                                                                                          |
 | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Marca     | `logouno.png`, `isotipouno.png`, `isotipodos.png`, `favicon.ico` (en `src/app/`)                                                                                  |
+| Marca     | `logouno.png`, `isotipouno.png`, `isotipodos.png`                                                                                                                 |
 | Fondos    | `fondodegradado.png`, `fondoaboutus.png`                                                                                                                          |
 | Flechas   | `flechaazulderecha.png`, `flechaazulizquierda.png`, `flechagranderesponsiva.png`, `iconoflechagrande.png`                                                         |
 | Íconos    | `icononuestrosservicios.png`, `iconoblog.png`, `iconoasesorias.png`, `iconoescribenos.png`, `iconohonestidad.png`, `iconoresponsabilidad.png`, `iconorespeto.png` |
@@ -49,6 +49,9 @@ Todas las imágenes que referencia el código (si falta alguna, la página muest
 | Equipo    | `credencialricardo.png`, `credencialgabriela.png`, `credencialariel.png`, `credencialhector.png`, `credencialjesus.png`                                           |
 | Clientes  | `client1.png` … `client40.(png\|jpeg)` (ver `src/content/clientes.ts`)                                                                                            |
 | Recursos  | `pdfs/pdfrecursoweb.pdf` (hoy se sirve en producción; puede estar referenciado en la BD)                                                                          |
+
+El favicon (`src/app/favicon.ico`), `src/app/icon.png` y `src/app/apple-icon.png` se generaron a
+partir de `isotipodos.png` (isotipo azul). Next los enlaza solos en el `<head>`.
 
 > **No copies** `public/excels/` del sitio anterior: contiene datos reales de clientes y claves
 > SII. Las plantillas Excel nuevas (`public/plantillas/`) usan datos ficticios.
