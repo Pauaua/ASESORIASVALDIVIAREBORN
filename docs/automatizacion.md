@@ -16,16 +16,16 @@ Navegador ──► /api/automation (Vercel, valida sesión y rol) ──► DAE
 
 ## Contrato con el daemon (no cambia)
 
-| Acción | Daemon | Cuerpo | Timeout |
-|---|---|---|---|
-| Health | `GET /health` → `{ ok: true }` | — | 10 s |
-| Listar jobs | `GET /jobs` | — | 10 s |
-| Estado | `GET /status/{job_id}` | — | 10 s |
-| Detener | `POST /stop/{job_id}` | — | 10 s |
-| Boleta individual | `POST /run/boletas/individual` | JSON | 15 s |
-| Factura individual | `POST /run/facturas/individual` | JSON | 15 s |
-| Boletas masivo | `POST /run/boletas/masivo` | multipart `archivo`, `headless` | 30 s |
-| Facturas masivo | `POST /run/facturas/masivo` | multipart `archivo` | 30 s |
+| Acción             | Daemon                          | Cuerpo                          | Timeout |
+| ------------------ | ------------------------------- | ------------------------------- | ------- |
+| Health             | `GET /health` → `{ ok: true }`  | —                               | 10 s    |
+| Listar jobs        | `GET /jobs`                     | —                               | 10 s    |
+| Estado             | `GET /status/{job_id}`          | —                               | 10 s    |
+| Detener            | `POST /stop/{job_id}`           | —                               | 10 s    |
+| Boleta individual  | `POST /run/boletas/individual`  | JSON                            | 15 s    |
+| Factura individual | `POST /run/facturas/individual` | JSON                            | 15 s    |
+| Boletas masivo     | `POST /run/boletas/masivo`      | multipart `archivo`, `headless` | 30 s    |
+| Facturas masivo    | `POST /run/facturas/masivo`     | multipart `archivo`             | 30 s    |
 
 Todas llevan el header `x-daemon-secret: ${DAEMON_SECRET}`. El código está en `src/lib/daemon.ts`
 y `src/app/api/automation/route.ts` (`maxDuration = 60`).

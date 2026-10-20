@@ -1,6 +1,6 @@
 /**
- * Noticias del sitio anterior (2024), con el texto original. En la fase 6 se mueven a la base de
- * datos (modelo Post) y este archivo queda solo como seed.
+ * Noticias del sitio anterior (2024), con el texto original. Desde la fase 6 las noticias viven en la
+ * base de datos (modelo Post): este archivo solo alimenta `npm run noticias:sembrar`.
  *
  * Los párrafos se separaron donde el original tenía doble espacio; el texto no se modificó.
  */

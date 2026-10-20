@@ -160,6 +160,15 @@ npx tsx scripts/auditar-archivos-huerfanos.ts
 
   Sin `--confirmar` el script solo muestra lo que haría.
 
+### Noticias iniciales
+
+La tabla `Post` (migración `noticias`) nace vacía. Carga las 6 noticias del sitio anterior, con sus
+fuentes (idempotente: no toca las que ya existan):
+
+```bash
+npm run noticias:sembrar -- --url "<DATABASE_URL de Railway>"
+```
+
 ## 9. Prueba de humo
 
 Con `DATABASE_URL` de Railway en un deploy de preview de Vercel:

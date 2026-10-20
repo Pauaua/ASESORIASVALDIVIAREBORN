@@ -42,6 +42,7 @@ model User {
   driveURL          String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @default(now()) @updatedAt
+  posts             Post[]
 
   @@map("Users")
 }
@@ -113,4 +114,26 @@ model RateLimit {
   resetAt DateTime
 
   @@index([resetAt])
+}
+
+/// Noticias del sitio (v2). Las administra ADMIN desde /dashboard/noticias.
+model Post {
+  id          Int       @id @default(autoincrement())
+  title       String
+  slug        String    @unique
+  publishedAt DateTime
+  /// URL de la imagen (Vercel Blob) o ruta local en public/ (noticias sembradas).
+  image       String?
+  imageAlt    String?
+  excerpt     String
+  /// Contenido en markdown (sin HTML: se renderiza con react-markdown).
+  content     String
+  sources     String[]  @default([])
+  published   Boolean   @default(false)
+  authorId    Int?
+  author      User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+
+  @@index([published, publishedAt])
 }

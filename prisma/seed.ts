@@ -5,7 +5,7 @@
  * Uso: npm run db:seed
  *
  * Se niega a correr contra una base que no sea local, para no tocar producción por error.
- * (Las noticias se agregan al seed en la fase 6.)
+ * Las noticias se cargan aparte con `npm run noticias:sembrar` (sirve también en producción).
  */
 import 'dotenv/config'
 import { PrismaPg } from '@prisma/adapter-pg'
