@@ -34,7 +34,7 @@ oficina) si quieres conservar las versiones en alta resolución.
 
 ## Archivos esperados
 
-Imágenes usadas por el sitio (se irá completando a medida que se construyen las páginas):
+Todas las imágenes que referencia el código (si falta alguna, la página muestra un hueco):
 
 | Uso       | Archivos                                                                                                                                                          |
 | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -51,4 +51,4 @@ Imágenes usadas por el sitio (se irá completando a medida que se construyen la
 | Recursos  | `pdfs/pdfrecursoweb.pdf` (hoy se sirve en producción; puede estar referenciado en la BD)                                                                          |
 
 > **No copies** `public/excels/` del sitio anterior: contiene datos reales de clientes y claves
-> SII. La plantilla Excel nueva (fase 5) usa datos ficticios.
+> SII. Las plantillas Excel nuevas (`public/plantillas/`) usan datos ficticios.
