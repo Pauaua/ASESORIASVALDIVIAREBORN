@@ -49,6 +49,29 @@ export function NavbarMenu({ rol = null }: { rol?: Rol | null }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [abierto])
 
+  return <MenuLista rol={rol} pathname={pathname} abierto={abierto} setAbierto={setAbierto} />
+}
+
+/**
+ * Versión sin sesión ni ruta actual, para el shell estático mientras se resuelve la sesión
+ * (no usa usePathname, que no está disponible al prerenderizar rutas dinámicas).
+ */
+export function NavbarMenuEstatico() {
+  const [abierto, setAbierto] = useState(false)
+  return <MenuLista rol={null} pathname="" abierto={abierto} setAbierto={setAbierto} />
+}
+
+function MenuLista({
+  rol,
+  pathname,
+  abierto,
+  setAbierto,
+}: {
+  rol: Rol | null
+  pathname: string
+  abierto: boolean
+  setAbierto: React.Dispatch<React.SetStateAction<boolean>>
+}) {
   return (
     <>
       <button
@@ -89,7 +112,7 @@ export function NavbarMenu({ rol = null }: { rol?: Rol | null }) {
                   alt=""
                   width={21}
                   height={25}
-                  className="mr-2"
+                  className="mr-2 h-auto w-[21px] shrink-0"
                 />
                 <span>{enlace.texto}</span>
               </Link>
