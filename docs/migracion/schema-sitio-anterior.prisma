@@ -1,0 +1,85 @@
+// Esquema EXACTO de la base del sitio anterior (creada con `prisma db push`), expresado con
+// los nombres del proyecto nuevo. Solo se usa para verificar que la base importada no tenga
+// diferencias antes de marcar la migración 0_init como aplicada (docs/migracion-bd.md).
+// No editar.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../../src/generated/prisma-sitio-anterior"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  TEAM
+  CLIENT
+}
+
+model User {
+  id                Int       @id @default(autoincrement())
+  email             String    @unique
+  username          String    @unique
+  name              String
+  lastname          String
+  password          String
+  phone             String?
+  image             String?
+  role              Role
+  active            Boolean   @default(true)
+  resetToken        String?
+  resetTokenExpires DateTime?
+  company           String?
+  companyEmail      String?
+  companyPhone      String?
+  companyRUT        String?
+  driveURL          String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now()) @updatedAt
+
+  @@map("Users")
+}
+
+model ContactForm {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  apellido  String
+  correo    String
+  telefono  String?
+  mensaje   String
+  createdAt DateTime @default(now())
+}
+
+model CotizationForm {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  apellido  String
+  correo    String
+  telefono  String?
+  servicio  String
+  mensaje   String
+  createdAt DateTime @default(now())
+}
+
+model Resource {
+  id          Int            @id @default(autoincrement())
+  name        String
+  description String?
+  files       ResourceFile[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @default(now()) @updatedAt
+}
+
+model ResourceFile {
+  id         Int       @id @default(autoincrement())
+  name       String
+  url        String
+  type       String?
+  resourceId Int?
+  resource   Resource? @relation(fields: [resourceId], references: [id], onDelete: SetNull)
+  createdAt  DateTime  @default(now())
+
+  @@map("File")
+}

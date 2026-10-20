@@ -50,3 +50,6 @@ next-env.d.ts
 
 # cliente de Prisma generado
 /src/generated/
+
+# respaldos de base de datos (docs/migracion-bd.md)
+/backup/
