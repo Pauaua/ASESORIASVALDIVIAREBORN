@@ -61,6 +61,13 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'gk5flxbicoiece78.public.blob.vercel-storage.com' },
     ],
   },
+  async redirects() {
+    return [
+      // El alta de usuarios se unificó en el panel (solo ADMIN).
+      { source: '/auth/register', destination: '/dashboard/usuarios/nuevo', permanent: true },
+      { source: '/auth/error', destination: '/auth/login', permanent: true },
+    ]
+  },
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }]
   },
