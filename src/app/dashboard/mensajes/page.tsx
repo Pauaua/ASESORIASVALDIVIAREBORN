@@ -63,7 +63,7 @@ async function MensajesPage({ searchParams }: PageProps<'/dashboard/mensajes'>) 
             >
               {TITULOS_TIPO[tipo]}
               {noLeidos[tipo] > 0 && (
-                <span className="rounded-full bg-brand-amber px-2 text-xs font-bold text-brand-blue">
+                <span className="rounded-full bg-brand-amber px-2 text-xs font-bold text-gray-900">
                   {noLeidos[tipo]}
                   <span className="sr-only"> sin leer</span>
                 </span>

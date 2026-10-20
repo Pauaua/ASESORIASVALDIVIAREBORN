@@ -56,7 +56,7 @@ function ContenidoSidebar({ datos, alNavegar }: { datos: DatosSidebar; alNavegar
           className="mb-2 size-22 rounded-full bg-white object-cover"
         />
         <p className="text-base font-bold break-words">{datos.nombre.toUpperCase()}</p>
-        <p className="text-xs break-all opacity-90">{datos.email}</p>
+        <p className="text-xs break-all">{datos.email}</p>
       </div>
       <nav aria-label="Panel" className="flex-1">
         <ul className="space-y-1">
@@ -77,7 +77,7 @@ function ContenidoSidebar({ datos, alNavegar }: { datos: DatosSidebar; alNavegar
                   <Icono className="size-5 shrink-0" aria-hidden="true" />
                   <span className="flex-1">{s.titulo}</span>
                   {s.href === '/dashboard/mensajes' && datos.noLeidos > 0 && (
-                    <span className="rounded-full bg-brand-amber px-2 text-xs font-bold text-brand-blue">
+                    <span className="rounded-full bg-brand-amber px-2 text-xs font-bold text-gray-900">
                       {datos.noLeidos}
                       <span className="sr-only"> sin leer</span>
                     </span>
