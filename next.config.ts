@@ -20,7 +20,8 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   `img-src 'self' data: blob: ${BLOB_HOSTS}${VERCEL_LIVE}`,
   "font-src 'self' data:",
-  `connect-src 'self' ${TURNSTILE}${isDev ? ' ws: wss:' : ''}${VERCEL_LIVE}`,
+  // Subidas directas del navegador a Vercel Blob (fotos de perfil, PDF, imágenes de noticias).
+  `connect-src 'self' ${TURNSTILE} https://vercel.com https://*.blob.vercel-storage.com${isDev ? ' ws: wss:' : ''}${VERCEL_LIVE}`,
   // Mapa embebido de Google Maps en el footer y widget de Turnstile.
   `frame-src https://www.google.com https://maps.google.com ${TURNSTILE}${VERCEL_LIVE}`,
   "object-src 'none'",
@@ -59,6 +60,8 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       // Imágenes de perfil ya subidas en el sitio anterior (Vercel Blob).
       { protocol: 'https', hostname: 'gk5flxbicoiece78.public.blob.vercel-storage.com' },
+      // Store de Vercel Blob del proyecto nuevo (fotos de perfil e imágenes de noticias).
+      { protocol: 'https', hostname: '*.public.blob.vercel-storage.com' },
     ],
   },
   async redirects() {

@@ -26,7 +26,7 @@ const camposComunes = {
     .trim()
     .max(20, 'Máximo 20 dígitos')
     .regex(/^[0-9]*$/, 'Por favor, ingrese solo números')
-    .optional()
+    .nullish()
     .transform((telefono) => (telefono ? telefono : undefined)),
   mensaje: texto(2000),
 }

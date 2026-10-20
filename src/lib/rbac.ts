@@ -12,6 +12,12 @@
 export const ROLES = ['ADMIN', 'TEAM', 'CLIENT'] as const
 export type Rol = (typeof ROLES)[number]
 
+export const ETIQUETA_ROL: Record<Rol, string> = {
+  ADMIN: 'Administrador',
+  TEAM: 'Equipo',
+  CLIENT: 'Cliente',
+}
+
 /** Roles que un ADMIN puede asignar desde el panel. ADMIN solo se crea por seed/script. */
 export const ROLES_ASIGNABLES = ['TEAM', 'CLIENT'] as const satisfies readonly Rol[]
 export type RolAsignable = (typeof ROLES_ASIGNABLES)[number]
