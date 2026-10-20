@@ -47,6 +47,8 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   poweredByHeader: false,
+  // En desarrollo Next registra los argumentos de cada Server Action: incluirían contraseñas.
+  logging: { serverFunctions: false },
   turbopack: {
     rules: {
       '*.css': {
