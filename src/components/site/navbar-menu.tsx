@@ -122,7 +122,7 @@ function MenuLista({
         {rol ? (
           <>
             <li className="w-full lg:w-auto">
-              <Link href="/dashboard" className={enlaceCls}>
+              <Link href="/dashboard/perfil" className={enlaceCls}>
                 <LayoutDashboard className="mr-2 size-5" aria-hidden="true" />
                 Panel de Usuario
               </Link>

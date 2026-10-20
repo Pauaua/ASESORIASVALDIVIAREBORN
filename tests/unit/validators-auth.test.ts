@@ -20,9 +20,10 @@ describe('validadores de autenticación', () => {
 
   it('solo acepta callbackUrl internas', () => {
     expect(rutaInternaSegura('/dashboard/recursos')).toBe('/dashboard/recursos')
-    expect(rutaInternaSegura('https://evil.com')).toBe('/dashboard')
-    expect(rutaInternaSegura('//evil.com')).toBe('/dashboard')
-    expect(rutaInternaSegura('/\\evil.com')).toBe('/dashboard')
-    expect(rutaInternaSegura(undefined)).toBe('/dashboard')
+    expect(rutaInternaSegura('https://evil.com')).toBe('/dashboard/perfil')
+    expect(rutaInternaSegura('//evil.com')).toBe('/dashboard/perfil')
+    expect(rutaInternaSegura('/\\evil.com')).toBe('/dashboard/perfil')
+    expect(rutaInternaSegura(undefined)).toBe('/dashboard/perfil')
+    expect(rutaInternaSegura('/dashboard')).toBe('/dashboard/perfil')
   })
 })

@@ -49,8 +49,10 @@ export type RestablecerClaveInput = z.input<typeof restablecerClaveSchema>
 /**
  * Solo se acepta volver a rutas internas (evita redirecciones abiertas con `callbackUrl`).
  */
-export function rutaInternaSegura(valor: unknown, porDefecto = '/dashboard') {
+export function rutaInternaSegura(valor: unknown, porDefecto = '/dashboard/perfil') {
   if (typeof valor !== 'string') return porDefecto
   if (!valor.startsWith('/') || valor.startsWith('//') || valor.startsWith('/\\')) return porDefecto
+  // /dashboard solo redirige al perfil: se va directo (el router no sigue redirecciones del proxy).
+  if (valor === '/dashboard' || valor.startsWith('/dashboard?')) return porDefecto
   return valor
 }

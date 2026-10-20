@@ -31,7 +31,7 @@ export default auth((req) => {
 
   // Con sesión iniciada no tiene sentido volver al login ni a recuperar la contraseña.
   if (rol && (pathname === '/auth/login' || pathname === '/auth/forgot-password')) {
-    return NextResponse.redirect(new URL('/dashboard', req.nextUrl))
+    return NextResponse.redirect(new URL('/dashboard/perfil', req.nextUrl))
   }
   return NextResponse.next()
 })
