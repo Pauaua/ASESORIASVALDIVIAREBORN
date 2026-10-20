@@ -102,3 +102,13 @@ model ResourceFile {
 
   @@map("File")
 }
+
+/// Contadores de rate limiting por ventana fija (login, recuperación y formularios públicos).
+/// `key` = "<ámbito>:<hash de IP o email>"; nunca se guarda la IP en claro.
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
+
+  @@index([resetAt])
+}
