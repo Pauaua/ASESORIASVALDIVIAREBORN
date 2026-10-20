@@ -40,7 +40,7 @@ export function ServiciosHome() {
                   src={servicio.imagen.src}
                   alt=""
                   fill
-                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
+                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, calc(100vw - 4rem)"
                   className="rounded-xl object-cover"
                 />
               </div>

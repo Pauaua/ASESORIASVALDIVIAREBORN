@@ -20,6 +20,12 @@ export function HeroCarousel() {
   const [enFoco, setEnFoco] = useState(false)
   const reducirMovimiento = useReducedMotion()
   const total = slidesHero.length
+  // Las imágenes de los otros slides se piden después de la primera, para no competir con el LCP.
+  const [cargarResto, setCargarResto] = useState(false)
+  useEffect(() => {
+    const timer = setTimeout(() => setCargarResto(true), 2500)
+    return () => clearTimeout(timer)
+  }, [])
 
   const siguiente = useCallback(() => setActual((i) => (i + 1) % total), [total])
   const anterior = useCallback(() => setActual((i) => (i - 1 + total) % total), [total])
@@ -58,14 +64,17 @@ export function HeroCarousel() {
               visible ? 'opacity-100' : 'opacity-0',
             )}
           >
-            <Image
-              src={slide.imagen}
-              alt={slide.alt}
-              fill
-              sizes="100vw"
-              preload={index === 0}
-              className="object-cover"
-            />
+            {(index === 0 || cargarResto || index === actual) && (
+              <Image
+                src={slide.imagen}
+                alt={slide.alt}
+                fill
+                sizes="100vw"
+                preload={index === 0}
+                fetchPriority={index === 0 ? 'high' : undefined}
+                className="object-cover"
+              />
+            )}
             <div className="absolute inset-0 mt-20 flex flex-col justify-center px-4 pt-20 sm:px-8 md:px-16">
               {/* Solo el primer slide es el h1 de la página; los demás son decorativos. */}
               {(() => {

@@ -21,6 +21,7 @@ export default function ServiciosPage() {
           alt=""
           fill
           preload
+          fetchPriority="high"
           sizes="100vw"
           className="-z-10 object-cover"
         />

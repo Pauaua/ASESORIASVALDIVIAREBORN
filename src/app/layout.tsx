@@ -8,7 +8,8 @@ import { cn } from '@/lib/utils'
 import './globals.css'
 
 const overusedGrotesk = localFont({
-  src: './fonts/OverusedGrotesk-VF.woff',
+  // Subconjunto latino en WOFF2 de OverusedGrotesk-VF.woff (ver README, «Fuente»).
+  src: './fonts/OverusedGrotesk-VF-latin.woff2',
   variable: '--font-overused-grotesk',
   weight: '100 900',
   display: 'swap',

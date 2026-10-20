@@ -20,7 +20,7 @@ export function ServiciosDetalle() {
               alt=""
               width={servicio.imagen.width}
               height={servicio.imagen.height}
-              sizes="100vw"
+              sizes="(min-width: 1024px) 1px, calc(100vw - 4rem)"
               className="mb-4 h-auto w-full object-cover lg:hidden"
             />
             <h2

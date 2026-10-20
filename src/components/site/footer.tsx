@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { FacebookIcon, InstagramIcon } from '@/components/icons/brands'
 import { sitio } from '@/content/sitio'
 import { FondoDegradado } from './fondo-degradado'
+import { MapaDiferido } from './mapa'
 
 const enlaceCls = 'text-sm hover:text-brand-white sm:text-base lg:text-lg'
 const tituloCls = 'mb-4 text-xl font-semibold md:text-2xl lg:text-3xl'
@@ -39,12 +40,9 @@ export function Footer() {
               </li>
             </ul>
             <div className="my-8">
-              <iframe
+              <MapaDiferido
                 src={sitio.mapaEmbed}
-                title="Mapa: oficina de Asesorías Valdivia en Arturo Prat 482, Antofagasta"
-                className="h-40 w-full border-0 sm:h-52"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
+                titulo="Mapa: oficina de Asesorías Valdivia en Arturo Prat 482, Antofagasta"
               />
             </div>
             <address className="mt-8 text-left text-sm not-italic md:text-base">
