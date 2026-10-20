@@ -18,7 +18,9 @@
     "images:optimize": "tsx scripts/optimize-images.ts",
     "images:check": "tsx scripts/optimize-images.ts --check",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "mock:daemon": "tsx scripts/mock-daemon.ts",
+    "plantillas": "tsx scripts/generar-plantillas.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "5.9.2",
@@ -56,6 +58,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.2",
     "eslint-config-prettier": "10.1.8",
+    "exceljs": "^4.4.0",
     "prettier": "3.9.10",
     "prettier-plugin-tailwindcss": "0.8.1",
     "prisma": "7.10.1",
