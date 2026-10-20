@@ -1,0 +1,23 @@
+# Postgres local SOLO para desarrollo y pruebas (nunca apuntar a producción).
+# Uso: docker compose up -d
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: asesorias-valdivia-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: av
+      POSTGRES_PASSWORD: av_local
+      POSTGRES_DB: asesorias_valdivia
+    ports:
+      - '5434:5432'
+    volumes:
+      - av-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U av -d asesorias_valdivia']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  av-pgdata:

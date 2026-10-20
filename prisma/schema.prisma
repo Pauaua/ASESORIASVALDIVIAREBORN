@@ -1,0 +1,104 @@
+// Esquema de Asesorías Valdivia.
+//
+// Las tablas y columnas conservan EXACTAMENTE los nombres de la base de datos actual
+// (creada con `prisma db push` en el sitio anterior) mediante @@map/@map, para importar
+// los datos sin transformaciones. Cualquier cambio de esquema debe ser ADITIVO
+// (columnas opcionales o con default). Ver docs/migracion-bd.md.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  TEAM
+  CLIENT
+}
+
+model User {
+  id                Int       @id @default(autoincrement())
+  email             String    @unique
+  username          String    @unique
+  name              String
+  lastname          String
+  /// Hash bcrypt ($2a$/$2b$). Nunca se devuelve al cliente.
+  password          String
+  phone             String?
+  image             String?
+  role              Role
+  active            Boolean   @default(true)
+  /// SHA-256 del token de recuperación. Nunca se devuelve al cliente.
+  resetToken        String?
+  resetTokenExpires DateTime?
+  company           String?
+  companyEmail      String?
+  companyPhone      String?
+  companyRUT        String?
+  driveURL          String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @default(now()) @updatedAt
+
+  @@map("Users")
+}
+
+/// Distingue las consultas de /contacto de las solicitudes de registro de /solicitude.
+enum OrigenFormulario {
+  contacto
+  solicitud_registro
+}
+
+model ContactForm {
+  id        Int              @id @default(autoincrement())
+  nombre    String
+  apellido  String
+  correo    String
+  telefono  String?
+  mensaje   String
+  createdAt DateTime         @default(now())
+  // Aditivo v2: las filas existentes quedan como "contacto" y no leídas.
+  origen    OrigenFormulario @default(contacto)
+  leido     Boolean          @default(false)
+}
+
+model CotizationForm {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  apellido  String
+  correo    String
+  telefono  String?
+  servicio  String
+  mensaje   String
+  createdAt DateTime @default(now())
+  // Aditivo v2
+  leido     Boolean  @default(false)
+}
+
+/// Categoría de recursos complementarios.
+model Resource {
+  id          Int            @id @default(autoincrement())
+  name        String
+  description String?
+  files       ResourceFile[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @default(now()) @updatedAt
+}
+
+/// Archivo o enlace dentro de una categoría. Se llama `ResourceFile` en el código para no
+/// chocar con el tipo global `File` de JavaScript; la tabla sigue siendo "File".
+model ResourceFile {
+  id         Int       @id @default(autoincrement())
+  name       String
+  url        String
+  /// "link" | "pdf"
+  type       String?
+  resourceId Int?
+  resource   Resource? @relation(fields: [resourceId], references: [id], onDelete: SetNull)
+  createdAt  DateTime  @default(now())
+
+  @@map("File")
+}
