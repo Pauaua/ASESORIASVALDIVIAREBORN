@@ -13,7 +13,7 @@ vi.mock('@/lib/auth', () => ({
     sesion.actual ? { user: { ...sesion.actual, name: 'Prueba', email: 'p@x.cl' } } : null,
 }))
 vi.mock('next/server', () => ({ connection: async () => {} }))
-vi.mock('next/cache', () => ({ refresh: () => {} }))
+vi.mock('next/cache', () => ({ refresh: () => {}, updateTag: () => {} }))
 vi.mock('next/navigation', () => ({
   redirect: (url: string) => {
     throw new Error(`redirect:${url}`)
@@ -41,6 +41,7 @@ const db = vi.hoisted(() => {
     resourceFile: modelo(),
     contactForm: modelo(),
     cotizationForm: modelo(),
+    post: modelo(),
     $transaction: vi.fn(),
   }
   base.$transaction.mockImplementation(async (fn: (tx: unknown) => unknown) => fn(base))
@@ -51,6 +52,7 @@ vi.mock('@/lib/db', () => ({ db }))
 const usuarios = await import('@/lib/actions/usuarios')
 const recursos = await import('@/lib/actions/recursos')
 const mensajes = await import('@/lib/actions/mensajes')
+const noticias = await import('@/lib/actions/noticias')
 
 const IDS: Record<Rol, number> = { ADMIN: 1, TEAM: 2, CLIENT: 3 }
 
@@ -80,6 +82,8 @@ beforeEach(() => {
   db.resource.findUnique.mockResolvedValue({ files: [] })
   db.resourceFile.findUnique.mockResolvedValue({ url: 'https://ejemplo.cl/a.pdf' })
   db.user.count.mockResolvedValue(2)
+  db.post.findUnique.mockResolvedValue({ slug: 'a', image: null })
+  db.post.findFirst.mockResolvedValue(null)
 })
 
 type Caso = {
@@ -163,16 +167,42 @@ const CASOS: Caso[] = [
     permitidos: ['ADMIN'],
     ejecutar: () => mensajes.exportarMensajesCsv({ tipo: 'contacto' }),
   },
+  {
+    nombre: 'crearNoticia',
+    permitidos: ['ADMIN'],
+    ejecutar: () =>
+      noticias.crearNoticia({
+        title: 'T',
+        publishedAt: '2026-01-01',
+        excerpt: 'E',
+        content: 'C',
+        published: true,
+      }),
+  },
+  {
+    nombre: 'editarNoticia',
+    permitidos: ['ADMIN'],
+    ejecutar: () =>
+      noticias.editarNoticia(1, {
+        title: 'T',
+        publishedAt: '2026-01-01',
+        excerpt: 'E',
+        content: 'C',
+        published: true,
+      }),
+  },
+  {
+    nombre: 'cambiarPublicacion',
+    permitidos: ['ADMIN'],
+    ejecutar: () => noticias.cambiarPublicacion(1, false),
+  },
+  { nombre: 'eliminarNoticia', permitidos: ['ADMIN'], ejecutar: () => noticias.eliminarNoticia(1) },
 ]
 
 const ESCRITURAS = () =>
-  [db.user, db.resource, db.resourceFile, db.contactForm, db.cotizationForm].flatMap((m) => [
-    m.create,
-    m.update,
-    m.updateMany,
-    m.delete,
-    m.deleteMany,
-  ])
+  [db.user, db.resource, db.resourceFile, db.contactForm, db.cotizationForm, db.post].flatMap(
+    (m) => [m.create, m.update, m.updateMany, m.delete, m.deleteMany],
+  )
 
 describe('Server Actions × rol', () => {
   for (const caso of CASOS) {
