@@ -1,24 +1,38 @@
 'use client'
 
-import { CircleUserRound, Menu, X } from 'lucide-react'
+import { CircleUserRound, LayoutDashboard, LogOut, Menu, UserPlus, X } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { cerrarSesion } from '@/lib/actions/auth'
+import type { Rol } from '@/lib/rbac'
 import { cn } from '@/lib/utils'
 
-const ENLACES_PUBLICOS = [
+type Enlace = { href: string; texto: string }
+
+const ENLACES_PUBLICOS: Enlace[] = [
   { href: '/nosotros', texto: '¿Quiénes somos?' },
   { href: '/servicios', texto: 'Servicios' },
   { href: '/noticias', texto: 'Noticias' },
   { href: '/contacto', texto: 'Contacto' },
-] as const
+]
+
+const enlaceCls =
+  'flex items-center rounded px-4 py-1 transition-colors duration-200 hover:bg-brand-white hover:text-brand-blue focus-visible:ring-2 focus-visible:ring-white'
+
+/** Enlaces según el rol: sin sesión y CLIENT ven el sitio; ADMIN y TEAM, accesos de trabajo. */
+function enlacesPara(rol: Rol | null): Enlace[] {
+  if (rol === 'ADMIN' || rol === 'TEAM') return [{ href: '/', texto: 'Página de Inicio' }]
+  return ENLACES_PUBLICOS
+}
 
 /**
  * Menú de la navbar: horizontal desde `lg`, desplegable (hamburguesa) en pantallas menores.
- * Las variantes con sesión (CLIENT / ADMIN / TEAM) se agregan en la fase de autenticación.
+ * Sin sesión: enlaces del sitio + acceso al login. Con sesión: Panel de Usuario, (ADMIN)
+ * Registrar nuevo usuario y Cerrar sesión.
  */
-export function NavbarMenu() {
+export function NavbarMenu({ rol = null }: { rol?: Rol | null }) {
   const [abierto, setAbierto] = useState(false)
   const pathname = usePathname()
 
@@ -55,14 +69,20 @@ export function NavbarMenu() {
           abierto ? 'flex' : 'hidden',
         )}
       >
-        {ENLACES_PUBLICOS.map((enlace) => {
-          const activo = pathname === enlace.href || pathname.startsWith(`${enlace.href}/`)
+        {enlacesPara(rol).map((enlace) => {
+          const activo =
+            enlace.href === '/'
+              ? pathname === '/'
+              : pathname === enlace.href || pathname.startsWith(`${enlace.href}/`)
           return (
             <li key={enlace.href} className="w-full lg:w-auto">
               <Link
                 href={enlace.href}
                 aria-current={activo ? 'page' : undefined}
-                className="flex items-center rounded px-4 py-1 transition-colors duration-200 hover:bg-brand-white hover:text-brand-blue focus-visible:ring-2 focus-visible:ring-white aria-[current=page]:underline aria-[current=page]:underline-offset-4"
+                className={cn(
+                  enlaceCls,
+                  'aria-[current=page]:underline aria-[current=page]:underline-offset-4',
+                )}
               >
                 <Image
                   src="/flechaazulderecha.png"
@@ -76,16 +96,43 @@ export function NavbarMenu() {
             </li>
           )
         })}
-        <li className="w-full lg:w-auto">
-          <Link
-            href="/auth/login"
-            aria-label="Iniciar sesión"
-            className="flex items-center rounded px-3 py-2 transition-colors duration-200 hover:bg-brand-white hover:text-brand-blue focus-visible:ring-2 focus-visible:ring-white"
-          >
-            <CircleUserRound className="size-5" aria-hidden="true" />
-            <span className="ml-2 lg:sr-only">Iniciar sesión</span>
-          </Link>
-        </li>
+        {rol ? (
+          <>
+            <li className="w-full lg:w-auto">
+              <Link href="/dashboard" className={enlaceCls}>
+                <LayoutDashboard className="mr-2 size-5" aria-hidden="true" />
+                Panel de Usuario
+              </Link>
+            </li>
+            {rol === 'ADMIN' && (
+              <li className="w-full lg:w-auto">
+                <Link href="/dashboard/usuarios/nuevo" className={enlaceCls}>
+                  <UserPlus className="mr-2 size-5" aria-hidden="true" />
+                  Registrar nuevo usuario
+                </Link>
+              </li>
+            )}
+            <li className="w-full lg:w-auto">
+              <form action={cerrarSesion}>
+                <button type="submit" className={cn(enlaceCls, 'w-full')}>
+                  <LogOut className="mr-2 size-5" aria-hidden="true" />
+                  Cerrar sesión
+                </button>
+              </form>
+            </li>
+          </>
+        ) : (
+          <li className="w-full lg:w-auto">
+            <Link
+              href="/auth/login"
+              aria-label="Iniciar sesión"
+              className="flex items-center rounded px-3 py-2 transition-colors duration-200 hover:bg-brand-white hover:text-brand-blue focus-visible:ring-2 focus-visible:ring-white"
+            >
+              <CircleUserRound className="size-5" aria-hidden="true" />
+              <span className="ml-2 lg:sr-only">Iniciar sesión</span>
+            </Link>
+          </li>
+        )}
       </ul>
     </>
   )

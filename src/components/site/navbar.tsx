@@ -1,6 +1,14 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { Suspense } from 'react'
+import { getUsuario } from '@/lib/session'
 import { NavbarMenu } from './navbar-menu'
+
+/** Menú con la sesión del usuario: lee cookies, así que se transmite tras el shell estático. */
+async function NavbarMenuConSesion() {
+  const usuario = await getUsuario()
+  return <NavbarMenu rol={usuario?.rol ?? null} />
+}
 
 /** Barra de navegación fija, azul semitransparente, con el logo a la izquierda. */
 export function Navbar() {
@@ -18,7 +26,9 @@ export function Navbar() {
             className="h-auto w-28 sm:w-36 lg:w-48"
           />
         </Link>
-        <NavbarMenu />
+        <Suspense fallback={<NavbarMenu />}>
+          <NavbarMenuConSesion />
+        </Suspense>
       </nav>
     </header>
   )
