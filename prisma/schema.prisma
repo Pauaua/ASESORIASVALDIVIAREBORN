@@ -97,7 +97,9 @@ model ResourceFile {
   /// "link" | "pdf"
   type       String?
   resourceId Int?
-  resource   Resource? @relation(fields: [resourceId], references: [id], onDelete: SetNull)
+  // Al borrar una categoría se borran sus archivos (decidido). Los huérfanos previos se revisan
+  // con scripts/auditar-archivos-huerfanos.ts.
+  resource   Resource? @relation(fields: [resourceId], references: [id], onDelete: Cascade)
   createdAt  DateTime  @default(now())
 
   @@map("File")

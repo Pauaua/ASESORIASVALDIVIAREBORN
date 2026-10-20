@@ -145,14 +145,20 @@ el build de Vercel.
 # Emails con mayúsculas y colisiones al pasarlos a minúsculas.
 npx tsx scripts/auditar-emails.ts
 
-# Archivos de recursos sin categoría (antes del cambio a ON DELETE CASCADE de la fase 4).
+# Archivos de recursos sin categoría (quedaron así en el sitio anterior al borrar categorías).
 npx tsx scripts/auditar-archivos-huerfanos.ts
 ```
 
 - Si `auditar-emails` no muestra colisiones, normaliza con
   `npx tsx scripts/auditar-emails.ts --apply`. Si hay colisiones, el script se niega: decide cuál
   cuenta conservar y corrígela a mano antes.
-- Envía el resultado de los huérfanos para decidir si se asignan a una categoría o se eliminan.
+- Archivos huérfanos: la migración `archivos_cascade` (aplicada en 7.3) hace que borrar una
+  categoría borre sus archivos, pero no toca los huérfanos que ya existen (no se ven en el panel).
+  Revisa la lista y decide:
+  - asignarlos a una categoría: `npx tsx scripts/auditar-archivos-huerfanos.ts --asignar <id> --confirmar`
+  - eliminarlos: `npx tsx scripts/auditar-archivos-huerfanos.ts --eliminar --confirmar`
+
+  Sin `--confirmar` el script solo muestra lo que haría.
 
 ## 9. Prueba de humo
 
