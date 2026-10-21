@@ -1,5 +1,13 @@
 # Runbook: base de datos en Neon (conectada desde Vercel)
 
+> **Ejecutado el 2026-10-20** (escenario B): respaldo `backup/asesorias-20261020-2145.dump` →
+> restaurado solo el esquema `public` en `asesorias-valdivia-db` (conteos idénticos) → se eliminó
+> en la base nueva la tabla huérfana `RoleEnum` y su tipo `RoleEnum_value` (vacía, sin
+> referencias, de un esquema antiguo; el paso 6.1 la marcaba como diferencia) → baseline y
+> migraciones sin diferencias → auditorías limpias → 6 noticias sembradas. La base antigua
+> (`ep-winter-boat`) no se modificó y queda como respaldo. El esquema `neon_auth` de la base
+> antigua (Neon Auth, que el sitio no usa) no se migró.
+
 Este procedimiento lo ejecuta **la dueña del sitio**, no se automatiza. El flujo
 (dump → restore → verificación de deriva → baseline → migraciones aditivas → inserción nueva) se
 ensayó localmente con el esquema real del sitio anterior sin diferencias.
