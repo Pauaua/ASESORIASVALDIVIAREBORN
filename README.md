@@ -181,7 +181,4 @@ docs/                despliegue, base de datos, automatización, imágenes
 
 ## Autoría y uso de inteligencia artificial
 
-El diseño, la arquitectura y las ideas de este proyecto son de autoría de **Paulina Acuña**.
-
-Se utilizó inteligencia artificial como herramienta de apoyo para agilizar el desarrollo,
-escribir y ejecutar pruebas, y realizar correcciones.
+El diseño, la arquitectura y las ideas de este proyecto son de autoría propia. Se utilizó inteligencia artificial como herramienta de apoyo para agilizar el desarrollo, escribir y ejecutar pruebas, y realizar correcciones.
