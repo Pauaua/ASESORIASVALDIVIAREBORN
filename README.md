@@ -16,7 +16,7 @@ Sitio web y panel de clientes de **Asesorías Valdivia**, firma contable de Anto
 ## Stack
 
 Next.js 16 (App Router, Cache Components, Server Actions) · React 19 · TypeScript estricto ·
-Tailwind CSS v4 + shadcn/ui (Radix) · lucide-react · Prisma 7 + PostgreSQL (Railway) ·
+Tailwind CSS v4 + shadcn/ui (Radix) · lucide-react · Prisma 7 + PostgreSQL (Neon) ·
 Auth.js v5 (credenciales, JWT) · Zod + react-hook-form · Resend + React Email · Vercel Blob ·
 Vitest + Playwright. Se despliega en Vercel.
 
@@ -129,7 +129,7 @@ pyftsubset src/app/fonts/OverusedGrotesk-VF.woff --flavor=woff2 --layout-feature
 ## Documentación
 
 - [`docs/deploy.md`](docs/deploy.md): Vercel, variables, dominio y PC del daemon.
-- [`docs/migracion-bd.md`](docs/migracion-bd.md): migración de la base Neon → Railway.
+- [`docs/migracion-bd.md`](docs/migracion-bd.md): base de datos en Neon conectada desde Vercel (respaldo, migraciones, auditorías).
 - [`docs/automatizacion.md`](docs/automatizacion.md): automatización SII, contrato con el daemon y mock.
 - [`docs/imagenes.md`](docs/imagenes.md): cómo insertar y optimizar imágenes.
 

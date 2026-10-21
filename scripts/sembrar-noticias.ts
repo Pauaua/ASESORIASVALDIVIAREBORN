@@ -5,7 +5,7 @@
  *
  * Uso:
  *   npm run noticias:sembrar                    # usa DATABASE_URL de .env
- *   npm run noticias:sembrar -- --url "<url>"   # otra base (p. ej. Railway)
+ *   npm run noticias:sembrar -- --url "<url>"   # otra base (p. ej. Neon)
  */
 import { noticias } from '../src/content/noticias'
 import { createScriptPrisma } from './lib/prisma'

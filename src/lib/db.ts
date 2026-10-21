@@ -6,13 +6,12 @@ import { env } from '@/env'
 import { PrismaClient } from '@/generated/prisma/client'
 
 /**
- * Cliente de Prisma para Vercel (serverless) + PostgreSQL en Railway.
+ * Cliente de Prisma para Vercel (serverless) + PostgreSQL en Neon.
  *
  * - Un solo Pool y un solo PrismaClient por instancia (singleton en globalThis, también
  *   sobrevive al hot reload en desarrollo).
- * - Pool pequeño (DATABASE_POOL_MAX, 5 por defecto): Railway no trae pooler y cada instancia
- *   de función abre sus propias conexiones. Si aparece "too many connections", ver
- *   docs/migracion-bd.md (PgBouncer).
+ * - DATABASE_URL es la conexión con pooler de Neon; cada instancia de función abre como máximo
+ *   DATABASE_POOL_MAX conexiones (5 por defecto). Ver docs/migracion-bd.md.
  * - attachDatabasePool mantiene viva la instancia hasta cerrar las conexiones inactivas
  *   antes de que Vercel la suspenda.
  */

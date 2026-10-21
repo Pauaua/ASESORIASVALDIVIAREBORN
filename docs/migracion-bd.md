@@ -1,158 +1,184 @@
-# Runbook: migración de la base de datos Neon (Vercel Postgres) → Railway
+# Runbook: base de datos en Neon (conectada desde Vercel)
 
-Este procedimiento lo ejecuta **la dueña del sitio**, no se automatiza. El flujo completo se ensayó
-localmente con el esquema real del sitio anterior (dump → restore → verificación de deriva →
-baseline → migraciones aditivas → inserción nueva) sin diferencias.
+Este procedimiento lo ejecuta **la dueña del sitio**, no se automatiza. El flujo
+(dump → restore → verificación de deriva → baseline → migraciones aditivas → inserción nueva) se
+ensayó localmente con el esquema real del sitio anterior sin diferencias.
 
-> **Regla de oro:** la base de Neon NO se modifica. Solo se lee con `pg_dump`. Si algo sale mal,
-> el sitio anterior sigue funcionando contra Neon y basta con no cambiar el dominio.
+La base vive en **Neon** y se conecta al proyecto de Vercel desde **Storage**: Vercel crea solo
+`DATABASE_URL` (conexión con pooler, la que usa el sitio) y `DATABASE_URL_UNPOOLED` (conexión
+directa, la que usan `pg_dump` y las migraciones de Prisma).
+
+> **Regla de oro:** antes de tocar nada, respalda (paso 2) y ensaya todo en una **rama de Neon**
+> (paso 3). La base principal solo se modifica cuando el ensayo salió limpio.
 
 ## 0. Requisitos
 
-- Docker Desktop (para usar `pg_dump`/`pg_restore` sin instalarlos).
+- Docker Desktop (para usar `pg_dump`/`pg_restore`/`psql` sin instalarlos).
 - El repo nuevo clonado, con `npm install` hecho.
 - Git Bash. En Git Bash antepone `MSYS_NO_PATHCONV=1` a los comandos `docker` que lleven rutas
   como `/backup/...` (si no, Git Bash las convierte en rutas de Windows).
 
-Variables que usarás (no las guardes en el repo):
+Las URLs de conexión se copian de **console.neon.tech → proyecto → Connect**:
+
+- **Directa**: desactiva «Connection pooling». El host **no** contiene `-pooler`.
+- **Con pooler**: activa «Connection pooling». El host contiene `-pooler`.
 
 ```bash
-# Neon: usa la URL SIN pooler (DATABASE_URL_UNPOOLED / POSTGRES_URL_NON_POOLING del proyecto
-# Vercel antiguo; el host NO contiene "-pooler"). pg_dump no funciona bien a través del pooler.
-export NEON_URL='postgresql://usuario:clave@ep-xxxx.region.aws.neon.tech/neondb?sslmode=require'
-
-# Railway: URL PÚBLICA (Postgres → Connect → Public Network). Para pg_dump/pg_restore
-# (libpq) usa sslmode=require.
-export RAILWAY_URL='postgresql://postgres:clave@xxxx.proxy.rlwy.net:12345/railway?sslmode=require'
+# No las guardes en el repo. Siempre la URL DIRECTA para respaldos y migraciones.
+export NEON_DIRECTA='postgresql://usuario:clave@ep-xxxx.us-east-1.aws.neon.tech/neondb?sslmode=require'
 ```
 
-## 1. Crear la base en Railway
+> Si un comando de Prisma reclama por un parámetro de la URL, quita `&channel_binding=require`
+> del final.
 
-1. Railway → New Project → Database → **PostgreSQL**.
-2. Región: **US East (Virginia)**. Railway no tiene región en Sudamérica; Virginia es la más
-   cercana a la región de funciones de Vercel que usaremos (**`iad1`, Washington D.C.**). Así cada
-   consulta viaja ~1–2 ms en vez de cruzar el continente.
-3. Versión de Postgres: igual o mayor que la de Neon. Revisa la de Neon con:
+## 1. ¿Existe todavía la base del sitio anterior?
 
-   ```bash
-   docker run --rm postgres:17-alpine psql "$NEON_URL" -tAc "show server_version"
-   ```
+Borrar el proyecto antiguo de Vercel **no** borra su base: las bases de Storage pertenecen a la
+cuenta. Revisa **Vercel → Storage** (y/o [console.neon.tech](https://console.neon.tech)):
 
-   Usa una imagen `postgres:<versión>` ≥ a la del servidor de Neon en todos los comandos de abajo
-   (`pg_dump` debe ser de igual o mayor versión que el servidor).
+- **A. Sigue ahí** → se reutiliza. Sigue los pasos 2, 3, 5, 6, 7 y 8 (el 4 no aplica).
+- **B. No está** → se crea una nueva y se restaura un respaldo. Necesitas un `.dump` de la base
+  antigua. Sigue los pasos 4 a 8. Si no hay respaldo, no hay datos que migrar: basta con
+  `npm run db:deploy` sobre la base vacía, pero el primer ADMIN habrá que crearlo directamente en
+  la base (el sitio no tiene registro público y `db:seed` se niega a correr fuera de local).
 
-## 2. Ventana de corte
+Versión de Postgres de Neon (usa una imagen `postgres:<versión>` igual o mayor en todos los
+comandos `docker` de abajo):
 
-Los formularios públicos siguen escribiendo en Neon hasta que el dominio apunte al proyecto nuevo.
-Para no perder mensajes:
+```bash
+docker run --rm postgres:17-alpine psql "$NEON_DIRECTA" -tAc "show server_version"
+```
 
-1. Haz un **ensayo completo** (pasos 3–7) contra una base de Railway de prueba cuando quieras.
-2. El día del cambio: dump final (paso 3) → restore (4) → verificación (5–7) → cambio de dominio,
-   en el menor tiempo posible (en general menos de 15 minutos).
-3. Después del cambio, compara de nuevo los conteos de `ContactForm` y `CotizationForm` en Neon y
-   Railway (paso 5). Si entró algún mensaje en Neon durante la ventana, cópialo a mano desde la
-   tabla de Neon (son pocos campos) o reenvíalo a la bandeja.
-
-## 3. Dump de Neon (solo lectura)
+## 2. Respaldo (siempre, antes de cualquier cambio)
 
 ```bash
 mkdir -p backup
 MSYS_NO_PATHCONV=1 docker run --rm -v "$PWD/backup:/backup" postgres:17-alpine \
-  pg_dump "$NEON_URL" -Fc --no-owner --no-acl -f /backup/asesorias-$(date +%Y%m%d-%H%M).dump
+  pg_dump "$NEON_DIRECTA" -Fc --no-owner --no-acl -f /backup/asesorias-$(date +%Y%m%d-%H%M).dump
 ```
 
-- `-Fc` formato custom (comprimido, permite restaurar selectivamente).
-- `--no-owner --no-acl`: no arrastra los roles/permisos de Neon, que no existen en Railway.
+- `-Fc`: formato custom (comprimido, permite restaurar selectivamente).
+- `--no-owner --no-acl`: no arrastra roles ni permisos.
 
-Guarda el archivo `.dump` en un lugar seguro (contiene datos personales y hashes de contraseñas).
-`backup/` está fuera de git, no lo subas.
+Guarda el `.dump` en un lugar seguro (contiene datos personales y hashes de contraseñas).
+`backup/` está fuera de git: no lo subas.
 
-## 4. Restore en Railway
+## 3. Ensayo en una rama de Neon (escenario A)
 
-La base de Railway debe estar **vacía** (recién creada).
+Una rama de Neon es una copia instantánea de la base, independiente: lo que hagas en ella no
+afecta a la principal.
 
-```bash
-MSYS_NO_PATHCONV=1 docker run --rm -v "$PWD/backup:/backup" postgres:17-alpine \
-  pg_restore --no-owner --no-acl -d "$RAILWAY_URL" /backup/asesorias-AAAAMMDD-HHMM.dump
-```
+1. console.neon.tech → proyecto → **Branches → Create branch**, desde la rama principal
+   (`main` o `production`). Nombre: `ensayo-migracion`.
+2. Copia la URL **directa** de la rama y ejecuta con ella los pasos 6 y 7:
 
-Puede avisar que el esquema `public` ya existe: es normal.
+   ```bash
+   export NEON_DIRECTA='<URL directa de la rama ensayo-migracion>'
+   ```
 
-## 5. Verificar conteos por tabla
+3. Si todo sale limpio, borra la rama y repite los pasos 6 y 7 con la URL directa de la rama
+   principal. Si algo falla, borra la rama: la base principal sigue intacta.
 
-Ejecuta lo mismo en ambas bases y compara:
+## 4. Crear la base y restaurar (escenario B)
 
-```bash
-CONTEO="select 'Users', count(*) from \"Users\"
-union all select 'ContactForm', count(*) from \"ContactForm\"
-union all select 'CotizationForm', count(*) from \"CotizationForm\"
-union all select 'Resource', count(*) from \"Resource\"
-union all select 'File', count(*) from \"File\""
+1. Vercel → **Storage → Create Database → Neon**.
+   - Región: **Washington, D.C., USA (East) – `iad1`** (AWS us-east-1), la misma de las funciones
+     del sitio (`vercel.json` fija `"regions": ["iad1"]`).
+   - Plan: el gratuito alcanza para el tráfico del sitio (límites en neon.tech/pricing).
+2. Conéctala al proyecto (paso 5) y copia su URL directa (console.neon.tech → Connect).
+3. Restaura el respaldo. La base debe estar **vacía**:
 
-docker run --rm postgres:17-alpine psql "$NEON_URL"    -tAc "$CONTEO"
-docker run --rm postgres:17-alpine psql "$RAILWAY_URL" -tAc "$CONTEO"
-```
+   ```bash
+   MSYS_NO_PATHCONV=1 docker run --rm -v "$PWD/backup:/backup" postgres:17-alpine \
+     pg_restore --no-owner --no-acl -d "$NEON_DIRECTA" /backup/asesorias-AAAAMMDD-HHMM.dump
+   ```
 
-Los cinco números deben coincidir.
+   Puede avisar que el esquema `public` ya existe: es normal.
 
-## 6. Secuencias de autoincrement
+4. Compara los conteos con los del respaldo (restaura el mismo `.dump` en el Postgres local de
+   Docker si no tienes la base antigua a mano):
 
-`pg_dump` incluye el valor actual de cada secuencia, así que normalmente no hay nada que hacer.
-Para asegurarse (es idempotente y no daña nada):
+   ```bash
+   CONTEO="select 'Users', count(*) from \"Users\"
+   union all select 'ContactForm', count(*) from \"ContactForm\"
+   union all select 'CotizationForm', count(*) from \"CotizationForm\"
+   union all select 'Resource', count(*) from \"Resource\"
+   union all select 'File', count(*) from \"File\""
 
-```bash
-docker run --rm postgres:17-alpine psql "$RAILWAY_URL" -c '
-select setval(pg_get_serial_sequence($$"Users"$$, $$id$$),          coalesce(max(id), 1), max(id) is not null) from "Users";
-select setval(pg_get_serial_sequence($$"ContactForm"$$, $$id$$),    coalesce(max(id), 1), max(id) is not null) from "ContactForm";
-select setval(pg_get_serial_sequence($$"CotizationForm"$$, $$id$$), coalesce(max(id), 1), max(id) is not null) from "CotizationForm";
-select setval(pg_get_serial_sequence($$"Resource"$$, $$id$$),       coalesce(max(id), 1), max(id) is not null) from "Resource";
-select setval(pg_get_serial_sequence($$"File"$$, $$id$$),           coalesce(max(id), 1), max(id) is not null) from "File";'
-```
+   docker run --rm postgres:17-alpine psql "$NEON_DIRECTA" -tAc "$CONTEO"
+   ```
 
-## 7. Baseline de Prisma y migraciones aditivas
+5. Secuencias de autoincrement. `pg_dump` las incluye, así que normalmente no hay nada que hacer;
+   esto lo asegura (idempotente):
+
+   ```bash
+   docker run --rm postgres:17-alpine psql "$NEON_DIRECTA" -c '
+   select setval(pg_get_serial_sequence($$"Users"$$, $$id$$),          coalesce(max(id), 1), max(id) is not null) from "Users";
+   select setval(pg_get_serial_sequence($$"ContactForm"$$, $$id$$),    coalesce(max(id), 1), max(id) is not null) from "ContactForm";
+   select setval(pg_get_serial_sequence($$"CotizationForm"$$, $$id$$), coalesce(max(id), 1), max(id) is not null) from "CotizationForm";
+   select setval(pg_get_serial_sequence($$"Resource"$$, $$id$$),       coalesce(max(id), 1), max(id) is not null) from "Resource";
+   select setval(pg_get_serial_sequence($$"File"$$, $$id$$),           coalesce(max(id), 1), max(id) is not null) from "File";'
+   ```
+
+## 5. Conectar la base al proyecto de Vercel
+
+Vercel → **Storage** → la base → **Connect Project** → el proyecto nuevo, con los entornos
+**Production** y **Preview**.
+
+Revisa en **Settings → Environment Variables** que existan `DATABASE_URL` y
+`DATABASE_URL_UNPOOLED`:
+
+- Vercel también agrega `PGHOST`, `POSTGRES_URL`, etc. No estorban; el sitio no las usa.
+- Si la base es del sitio anterior y **solo** aparecen las `POSTGRES_*`, crea a mano
+  `DATABASE_URL` con el valor de `POSTGRES_URL` y `DATABASE_URL_UNPOOLED` con el de
+  `POSTGRES_URL_NON_POOLING`.
+
+## 6. Baseline de Prisma y migraciones aditivas
 
 La base antigua se creó con `prisma db push` (sin historial de migraciones). Hay que decirle a
 Prisma que la migración `0_init` ya está aplicada y luego aplicar las nuevas, que son **solo
-aditivas** (columnas nuevas con default; no borran ni renombran nada).
+aditivas** (tablas y columnas nuevas con default; no borran ni renombran nada).
 
-Para los comandos de Prisma usa la URL de Railway con `sslmode=no-verify` (ver nota en
-`.env.example`):
+Siempre con la URL **directa** (el pooler no admite los bloqueos que usa `prisma migrate`):
 
 ```bash
-export DATABASE_URL="${RAILWAY_URL/sslmode=require/sslmode=no-verify}"
+export DATABASE_URL="$NEON_DIRECTA"
 
-# 7.1 Verificar que la base importada es EXACTAMENTE el esquema del sitio anterior.
+# 6.1 Verificar que la base es EXACTAMENTE el esquema del sitio anterior.
 #     Debe decir "No difference detected." (exit code 0). Si muestra diferencias, DETENTE.
 npx prisma migrate diff --from-config-datasource \
   --to-schema docs/migracion/schema-sitio-anterior.prisma --exit-code
 
-# 7.2 Marcar la baseline como aplicada (no ejecuta SQL).
+# 6.2 Marcar la baseline como aplicada (no ejecuta SQL).
 npx prisma migrate resolve --applied 0_init
 
-# 7.3 Aplicar las migraciones nuevas.
+# 6.3 Aplicar las migraciones nuevas.
 npx prisma migrate deploy
 
-# 7.4 Verificar que la base quedó igual al esquema actual: "No difference detected."
+# 6.4 Verificar que la base quedó igual al esquema actual: "No difference detected."
 npx prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
 ```
 
 Las migraciones de producción se aplican siempre así, a mano con `npm run db:deploy`, **nunca** en
-el build de Vercel.
+el build de Vercel. `prisma.config.ts` usa `DATABASE_URL_UNPOOLED` cuando existe, así que también
+funcionan con las variables bajadas de Vercel (`vercel env pull`).
 
-## 8. Auditorías posteriores (solo lectura)
+## 7. Auditorías y noticias
+
+Con la misma `DATABASE_URL` directa del paso 6:
 
 ```bash
-# Emails con mayúsculas y colisiones al pasarlos a minúsculas.
+# Emails con mayúsculas y colisiones al pasarlos a minúsculas (solo lectura).
 npx tsx scripts/auditar-emails.ts
 
-# Archivos de recursos sin categoría (quedaron así en el sitio anterior al borrar categorías).
+# Archivos de recursos sin categoría (solo lectura).
 npx tsx scripts/auditar-archivos-huerfanos.ts
 ```
 
 - Si `auditar-emails` no muestra colisiones, normaliza con
   `npx tsx scripts/auditar-emails.ts --apply`. Si hay colisiones, el script se niega: decide cuál
   cuenta conservar y corrígela a mano antes.
-- Archivos huérfanos: la migración `archivos_cascade` (aplicada en 7.3) hace que borrar una
+- Archivos huérfanos: la migración `archivos_cascade` (aplicada en 6.3) hace que borrar una
   categoría borre sus archivos, pero no toca los huérfanos que ya existen (no se ven en el panel).
   Revisa la lista y decide:
   - asignarlos a una categoría: `npx tsx scripts/auditar-archivos-huerfanos.ts --asignar <id> --confirmar`
@@ -160,41 +186,35 @@ npx tsx scripts/auditar-archivos-huerfanos.ts
 
   Sin `--confirmar` el script solo muestra lo que haría.
 
-### Noticias iniciales
-
 La tabla `Post` (migración `noticias`) nace vacía. Carga las 6 noticias del sitio anterior, con sus
 fuentes (idempotente: no toca las que ya existan):
 
 ```bash
-npm run noticias:sembrar -- --url "<DATABASE_URL de Railway>"
+npm run noticias:sembrar -- --url "$NEON_DIRECTA"
 ```
 
-## 9. Prueba de humo
+## 8. Prueba de humo
 
-Con `DATABASE_URL` de Railway en un deploy de preview de Vercel:
+En un deploy de preview de Vercel (ya conectado a la base):
 
 1. Inicia sesión con un usuario real con su contraseña actual (los hashes bcrypt `$2a$`/`$2b$`
    del sitio anterior se verificaron compatibles con `bcryptjs`).
 2. Revisa que el panel muestre usuarios, clientes, recursos y mensajes.
 3. Envía un formulario de contacto de prueba y verifica que aparece en la bandeja.
+4. `/dashboard/estado` debe mostrar la base conectada.
 
-## 10. Conexiones: Vercel serverless + Railway
+## 9. Conexiones y suspensión
 
-- Railway no trae pooler. Cada instancia de función de Vercel abre su propio pool, limitado por
-  `DATABASE_POOL_MAX` (5 por defecto; ver `src/lib/db.ts`). Con el tráfico del sitio esto alcanza
-  de sobra: el Postgres de Railway acepta 100 conexiones por defecto.
-- En Vercel, fija la región de funciones en **`iad1`** (se configura en `vercel.json` en la fase de
-  entrega), junto a la base en Virginia.
-- **Si aparece `too many connections`:** agrega PgBouncer en el mismo proyecto de Railway
-  (plantilla "PgBouncer" del marketplace de Railway, apuntando a la base), y cambia
-  `DATABASE_URL` en Vercel a la URL pública de PgBouncer. Empieza en modo `transaction`; si
-  aparecen errores de _prepared statements_, cambia a modo `session`. Baja también
-  `DATABASE_POOL_MAX` a 2–3. Las migraciones (`prisma migrate`) deben seguir usando la URL directa
-  de Postgres, no la de PgBouncer.
+- El sitio usa `DATABASE_URL` (con pooler de Neon), que admite miles de conexiones de clientes.
+  Cada instancia de función abre como máximo `DATABASE_POOL_MAX` (5 por defecto; ver
+  `src/lib/db.ts`).
+- Neon **suspende** el cómputo tras unos minutos sin consultas. La primera consulta después
+  despierta la base en ~0,5–1 s; el resto va a velocidad normal. Si molesta, en los planes de pago
+  se puede desactivar la suspensión (Neon → Branch → Compute → Scale to zero).
 
-## 11. Vuelta atrás
+## 10. Vuelta atrás
 
-Hasta que cambie el dominio, no hay nada que revertir: el sitio en producción sigue usando Neon.
-Después del cambio, revertir es volver a apuntar el dominio al proyecto antiguo de Vercel (que
-sigue conectado a Neon). Los mensajes que entraron mientras tanto quedan en Railway y se pueden
-copiar de vuelta igual que en el paso 2.
+- Antes de las migraciones: no hay nada que revertir.
+- Si algo sale mal después: Neon permite **restaurar la rama a un momento anterior**
+  (console.neon.tech → Restore; la ventana depende del plan). Como último recurso, restaura el
+  `.dump` del paso 2 en una base vacía.

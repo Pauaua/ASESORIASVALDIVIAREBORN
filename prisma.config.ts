@@ -8,7 +8,8 @@ export default defineConfig({
     seed: 'tsx prisma/seed.ts',
   },
   datasource: {
-    // `prisma generate` no necesita conexión: se permite que falte (p. ej. en el build de Vercel).
-    url: process.env.DATABASE_URL ?? '',
+    // Migraciones por la conexión directa de Neon (el pooler no admite los bloqueos de
+    // `prisma migrate`). `prisma generate` no necesita conexión: se permite que falte.
+    url: process.env.DATABASE_URL_UNPOOLED || process.env.DATABASE_URL || '',
   },
 })

@@ -42,7 +42,7 @@ async function EstadoPage() {
   const flags = featureFlags()
 
   const variables: [string, boolean, string][] = [
-    ['DATABASE_URL', true, 'Base de datos (Railway)'],
+    ['DATABASE_URL', true, 'Base de datos (Neon)'],
     ['AUTH_SECRET', true, 'Firma de sesiones'],
     ['RESEND_API_KEY', Boolean(env.RESEND_API_KEY), 'Envío de correos'],
     ['EMAIL_FROM', Boolean(env.EMAIL_FROM), 'Remitente de los correos'],
