@@ -181,4 +181,12 @@ docs/                despliegue, base de datos, automatización, imágenes
 
 ## Autoría y uso de inteligencia artificial
 
-El diseño, la arquitectura y las ideas de este proyecto son de autoría propia. Se utilizó inteligencia artificial como herramienta de apoyo para agilizar el desarrollo, escribir y ejecutar pruebas, y realizar correcciones.
+El diseño, la arquitectura y las ideas de este proyecto son de autoría propia: desde la identidad
+visual y la experiencia de cada página, hasta la organización del panel por roles, el modelo de
+datos y la integración con la automatización del SII. Cada decisión responde a las necesidades
+reales de la firma y de sus clientes.
+
+La inteligencia artificial se utilizó como herramienta de apoyo, al servicio de esas decisiones y
+no en su reemplazo: para agilizar la escritura de código, escribir y ejecutar pruebas
+automatizadas, y detectar y corregir errores. Todo el trabajo asistido fue revisado, orientado y
+validado antes de incorporarse al proyecto.
