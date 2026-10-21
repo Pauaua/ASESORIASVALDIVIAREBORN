@@ -42,18 +42,19 @@ cuenta. Revisa **Vercel → Storage** (y/o [console.neon.tech](https://console.n
   `npm run db:deploy` sobre la base vacía, pero el primer ADMIN habrá que crearlo directamente en
   la base (el sitio no tiene registro público y `db:seed` se niega a correr fuera de local).
 
-Versión de Postgres de Neon (usa una imagen `postgres:<versión>` igual o mayor en todos los
-comandos `docker` de abajo):
+La base antigua es Postgres 17 y la nueva (`asesorias-valdivia-db`, creada desde Vercel en
+`iad1`) es Postgres 18; por eso los comandos usan la imagen `postgres:18-alpine` (sus `pg_dump` y
+`pg_restore` sirven para ambas). Para revisar la versión de una base:
 
 ```bash
-docker run --rm postgres:17-alpine psql "$NEON_DIRECTA" -tAc "show server_version"
+docker run --rm postgres:18-alpine psql "$NEON_DIRECTA" -tAc "show server_version"
 ```
 
 ## 2. Respaldo (siempre, antes de cualquier cambio)
 
 ```bash
 mkdir -p backup
-MSYS_NO_PATHCONV=1 docker run --rm -v "$PWD/backup:/backup" postgres:17-alpine \
+MSYS_NO_PATHCONV=1 docker run --rm -v "$PWD/backup:/backup" postgres:18-alpine \
   pg_dump "$NEON_DIRECTA" -Fc --no-owner --no-acl -f /backup/asesorias-$(date +%Y%m%d-%H%M).dump
 ```
 
@@ -89,7 +90,7 @@ afecta a la principal.
 3. Restaura el respaldo. La base debe estar **vacía**:
 
    ```bash
-   MSYS_NO_PATHCONV=1 docker run --rm -v "$PWD/backup:/backup" postgres:17-alpine \
+   MSYS_NO_PATHCONV=1 docker run --rm -v "$PWD/backup:/backup" postgres:18-alpine \
      pg_restore --no-owner --no-acl -d "$NEON_DIRECTA" /backup/asesorias-AAAAMMDD-HHMM.dump
    ```
 
@@ -105,14 +106,14 @@ afecta a la principal.
    union all select 'Resource', count(*) from \"Resource\"
    union all select 'File', count(*) from \"File\""
 
-   docker run --rm postgres:17-alpine psql "$NEON_DIRECTA" -tAc "$CONTEO"
+   docker run --rm postgres:18-alpine psql "$NEON_DIRECTA" -tAc "$CONTEO"
    ```
 
 5. Secuencias de autoincrement. `pg_dump` las incluye, así que normalmente no hay nada que hacer;
    esto lo asegura (idempotente):
 
    ```bash
-   docker run --rm postgres:17-alpine psql "$NEON_DIRECTA" -c '
+   docker run --rm postgres:18-alpine psql "$NEON_DIRECTA" -c '
    select setval(pg_get_serial_sequence($$"Users"$$, $$id$$),          coalesce(max(id), 1), max(id) is not null) from "Users";
    select setval(pg_get_serial_sequence($$"ContactForm"$$, $$id$$),    coalesce(max(id), 1), max(id) is not null) from "ContactForm";
    select setval(pg_get_serial_sequence($$"CotizationForm"$$, $$id$$), coalesce(max(id), 1), max(id) is not null) from "CotizationForm";
